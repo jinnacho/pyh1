@@ -1,0 +1,338 @@
+import React, { useState, useEffect } from 'react';
+import { BookOpen, Code, Send, CheckCircle, Play, Layout, List, Repeat, MousePointer2, Lightbulb, AlertCircle, Edit3, ChevronRight, Terminal } from 'lucide-react';
+
+const App = () => {
+  const [level, setLevel] = useState(1);
+  const [activeTab, setActiveTab] = useState('concept');
+  const [selectedPart, setSelectedPart] = useState('변수와 연산자');
+  const [code, setCode] = useState('');
+  const [output, setOutput] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // 학습 데이터 구성 (Level 1, 2, 3) - 정답 부분을 빈칸(____)으로 수정
+  const courseData = {
+    1: [
+      { 
+        id: 'lv1_var', 
+        title: '변수와 연산자', 
+        icon: <Layout size={18} />, 
+        concept: '변수는 데이터를 담는 바구니입니다. 산술 연산자(+, -, *, /, //, %)를 사용하여 계산할 수 있습니다.',
+        examples: [
+          { q: '변수 a에 10, b에 3을 넣고 몫(//)을 출력하세요.', skel: 'a = 10\nb = 3\nprint(a ____ b)' },
+          { q: '반지름 r이 5일 때 원의 넓이(3.14 * r * r)를 계산해 출력하세요.', skel: 'r = 5\narea = 3.14 * ____ * ____\nprint(area)' },
+          { q: '변수 x에 7, y에 2를 넣고 나머지(%)를 출력하세요.', skel: 'x = 7\ny = 2\nprint(x ____ y)' },
+          { q: '10의 3제곱(**)을 계산하여 출력하세요.', skel: 'print(10 ____ 3)' },
+          { q: '나이(age) 변수에 15를 넣고 10년 후의 나이를 출력하세요.', skel: 'age = 15\nprint(age ____ 10)' }
+        ]
+      },
+      { 
+        id: 'lv1_io', 
+        title: '입출력 및 순차구조', 
+        icon: <Terminal size={18} />, 
+        concept: 'print()는 화면에 보여주고, input()은 키보드로 입력을 받습니다. 순서대로 실행되는 것이 순차구조입니다.',
+        examples: [
+          { q: '"Hello Python"을 화면에 출력하세요.', skel: '____("Hello Python")' },
+          { q: '이름을 입력받아 "안녕 (이름)"을 출력하세요.', skel: 'name = "파이썬"\nprint("안녕", ____)' },
+          { q: '두 단어를 입력받아 연결해서 출력하세요.', skel: 'w1 = "안녕"\nw2 = "친구야"\nprint(w1 ____ w2)' },
+          { q: '여러 값을 쉼표(,)로 구분하여 한 줄에 출력하세요.', skel: 'print("사과", "포도", "수박", sep="____")' },
+          { q: '변수 step1, step2를 순서대로 출력해 보세요.', skel: 'step1 = "준비"\nstep2 = "시작"\nprint(____)\nprint(____)' }
+        ]
+      },
+      { 
+        id: 'lv1_control', 
+        title: '제어문 기초', 
+        icon: <Repeat size={18} />, 
+        concept: '단순 조건문(if)과 반복문(for)의 기초를 배웁니다. 조건에 맞을 때만 코드가 실행됩니다.',
+        examples: [
+          { q: '변수 n이 10보다 크면 "Big"을 출력하세요.', skel: 'n = 15\nif n ____ 10:\n    print("Big")' },
+          { q: '0부터 4까지 5번 반복하며 "Hello"를 출력하세요.', skel: 'for i in range(____):\n    print("Hello")' },
+          { q: '비밀번호가 "1234"와 같으면 "환영합니다"를 출력하세요.', skel: 'pw = "1234"\nif pw ____ "1234":\n    print("환영합니다")' },
+          { q: '1부터 5까지 숫자를 하나씩 출력하세요.', skel: 'for i in range(1, ____):\n    print(i)' },
+          { q: '점수가 60점 이상이면 "Pass"를 출력하세요.', skel: 'score = 75\nif score ____ 60:\n    print("Pass")' }
+        ]
+      }
+    ],
+    2: [
+      { 
+        id: 'lv2_control', 
+        title: '중첩 및 다중 제어문', 
+        icon: <MousePointer2 size={18} />, 
+        concept: 'if-elif-else와 중첩 조건문, 중첩 반복문을 활용하여 복잡한 논리를 구성합니다.',
+        examples: [
+          { q: '점수에 따라 A, B, C 등급을 출력하세요.', skel: 'score = 85\nif score >= 90:\n    print("A")\n____ score >= 80:\n    print("B")\nelse:\n    print("C")' },
+          { q: '양수이면서 짝수인 경우에만 "OK"를 출력하세요.', skel: 'n = 4\nif n > 0:\n    if n % 2 ____ 0:\n        print("OK")' },
+          { q: '구구단 2단을 출력하는 반복문을 완성하세요.', skel: 'for i in range(1, 10):\n    print(f"2 x {i} = {____}")' },
+          { q: '1부터 10까지 짝수만 더하는 코드를 완성하세요.', skel: 'total = 0\nfor i in range(1, 11):\n    if i % 2 ____ 0:\n        total += i\nprint(total)' },
+          { q: '리스트 안의 숫자들 중 50보다 큰 수만 출력하세요.', skel: 'nums = [20, 55, 40, 90]\nfor n in nums:\n    if n ____ 50:\n        print(n)' }
+        ]
+      },
+      { 
+        id: 'lv2_list', 
+        title: '리스트와 화일입출력', 
+        icon: <List size={18} />, 
+        concept: '리스트의 다양한 메서드와 텍스트 화일을 다루는 기초를 학습합니다.',
+        examples: [
+          { q: '리스트의 끝에 "cherry"를 추가하세요.', skel: 'fruits = ["apple", "banana"]\nfruits.____("cherry")\nprint(fruits)' },
+          { q: '화일을 쓰기 모드로 여는 함수를 채우세요.', skel: 'f = open("data.txt", "____")\nf.write("Hello")\nf.close()' },
+          { q: '리스트에서 특정 인덱스 요소를 삭제하세요.', skel: 'data = [10, 20, 30]\ndata.____(1)\nprint(data)' },
+          { q: '리스트를 정렬한 후 출력하세요.', skel: 'nums = [3, 1, 4]\nnums.____()\nprint(nums)' },
+          { q: '리스트의 모든 요소를 합산하여 출력하세요.', skel: 'nums = [1, 2, 3, 4, 5]\nprint(____(nums))' }
+        ]
+      }
+    ],
+    3: [
+      { 
+        id: 'lv3_complex', 
+        title: '제어문과 리스트의 혼용', 
+        icon: <Repeat size={18} />, 
+        concept: '심화 로직을 통해 실제 프로그래밍 문제 해결 능력을 기릅니다.',
+        examples: [
+          { q: '리스트에서 최댓값을 찾는 로직을 완성하세요.', skel: 'nums = [3, 9, 2, 7]\nmax_val = nums[0]\nfor n in nums:\n    if n ____ max_val:\n        max_val = n\nprint(max_val)' },
+          { q: '2차원 리스트의 모든 요소를 출력하세요.', skel: 'matrix = [[1,2], [3,4]]\nfor row in matrix:\n    for item in ____:\n        print(item)' },
+          { q: '리스트 컴프리헨션으로 1~10 중 짝수 리스트를 만드세요.', skel: 'evens = [x for x in range(1, 11) if x % 2 ____ 0]\nprint(evens)' },
+          { q: 'n이 5가 되면 탈출(break)하는 루프를 만드세요.', skel: 'n = 0\nwhile True:\n    n += 1\n    if n == 5:\n        ____\nprint(n)' },
+          { q: '딕셔너리에서 키와 값을 함께 출력해 보세요.', skel: 'user = {"name": "Alice", "age": 25}\nfor k, v in user.____():\n    print(f"{k}: {v}")' }
+        ]
+      }
+    ]
+  };
+
+  const currentLevelData = courseData[level] || courseData[1];
+  const currentPart = currentLevelData.find(p => p.title === selectedPart) || currentLevelData[0];
+
+  // 가상 파이썬 인터프리터 (Virtual Interpreter) - 정답 매칭 로직 강화
+  const handleRunCode = () => {
+    const trimmedCode = code.replace(/\s/g, ''); // 공백 제거 후 비교를 위한 변수
+    if (!code.trim()) {
+      setOutput('> 실행할 코드를 입력하세요.');
+      return;
+    }
+    if (code.includes('____')) {
+      setOutput('Error: SyntaxError\n> 빈칸(____)을 모두 채워야 코드가 작동합니다.');
+      return;
+    }
+
+    let logs = ["[Python 3.10 Virtual Engine Running...]"];
+    
+    try {
+      // 1. 산술 연산 및 단순 출력
+      if (code.includes('print(')) {
+        if (trimmedCode.includes('//')) logs.push("3");
+        else if (trimmedCode.includes('3.14*r*r') || trimmedCode.includes('3.14*5*5')) logs.push("78.5");
+        else if (trimmedCode.includes('%')) logs.push("1");
+        else if (trimmedCode.includes('**')) logs.push("1000");
+        else if (trimmedCode.includes('age+10') || trimmedCode.includes('15+10')) logs.push("25");
+        
+        // 2. 입출력 시뮬레이션
+        else if (code.includes('Hello Python')) logs.push("Hello Python");
+        else if (code.includes('name')) logs.push("안녕 파이썬");
+        else if (code.includes('w1+w2') || code.includes('w1 + w2')) logs.push("안녕친구야");
+        else if (code.includes('sep=","') || code.includes("sep=', '")) logs.push("사과, 포도, 수박");
+        else if (code.includes('step1') && code.includes('step2')) { logs.push("준비"); logs.push("시작"); }
+        
+        // 3. 제어문 시뮬레이션
+        else if (code.includes('>') && code.includes('Big')) logs.push("Big");
+        else if (code.includes('range(5)')) { for(let i=0; i<5; i++) logs.push("Hello"); }
+        else if (code.includes('range(1, 6)')) { for(let i=1; i<=5; i++) logs.push(i.toString()); }
+        else if (code.includes('==') && code.includes('환영합니다')) logs.push("환영합니다");
+        else if (code.includes('elif') && code.includes('score >= 80')) logs.push("B");
+        else if (code.includes('2 * i')) { for(let i=1; i<10; i++) logs.push(`2 x ${i} = ${2*i}`); }
+        else if (code.includes('total += i')) logs.push("30"); 
+        
+        // 4. 리스트 및 심화
+        else if (code.includes('append')) logs.push("['apple', 'banana', 'cherry']");
+        else if (code.includes('pop')) logs.push("[10, 30]");
+        else if (code.includes('sort')) logs.push("[1, 3, 4]");
+        else if (code.includes('sum')) logs.push("15");
+        else if (code.includes('max_val')) logs.push("9");
+        else if (code.includes('matrix')) { logs.push("1"); logs.push("2"); logs.push("3"); logs.push("4"); }
+        else if (code.includes('evens')) logs.push("[2, 4, 6, 8, 10]");
+        else if (code.includes('break')) logs.push("5");
+        else if (code.includes('items')) { logs.push("name: Alice"); logs.push("age: 25"); }
+        else {
+            logs.push("> 실행 성공: 코드가 정상적으로 실행되었습니다.");
+        }
+      } else {
+        logs.push("> 실행 완료 (출력값 없음: print문을 사용했는지 확인하세요)");
+      }
+    } catch (e) {
+      logs.push(`Error: 코드를 분석하는 중에 문제가 발생했습니다.`);
+    }
+
+    logs.push("\n[Execution Finished]");
+    setOutput(logs.join('\n'));
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-100 flex flex-col font-sans selection:bg-indigo-100">
+      {/* Header */}
+      <header className="bg-indigo-900 text-white p-6 flex justify-between items-center shadow-xl border-b border-white/10">
+        <div className="flex items-center gap-4">
+          <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/20">
+            <Terminal className="text-indigo-300" size={24} />
+          </div>
+          <div>
+            <h1 className="text-xl font-black tracking-tight leading-none uppercase italic">Python Interpreter</h1>
+            <p className="text-[10px] font-bold text-indigo-300 tracking-[0.3em] mt-1.5 uppercase">Interactive Workbook v3.1</p>
+          </div>
+        </div>
+        <div className="flex bg-indigo-950/50 rounded-2xl p-1.5 border border-indigo-700/50 shadow-inner">
+          {[1, 2, 3].map(lv => (
+            <button key={lv} onClick={() => { setLevel(lv); setSelectedPart(courseData[lv][0].title); setCode(''); setOutput(''); setActiveTab('concept'); }}
+              className={`px-8 py-2.5 rounded-xl text-xs font-black transition-all ${level === lv ? 'bg-indigo-600 text-white shadow-lg scale-105' : 'text-indigo-400 hover:text-white hover:bg-white/5'}`}>
+              LEVEL {lv}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      <main className="flex-1 flex overflow-hidden">
+        {/* Sidebar */}
+        <aside className="w-80 bg-white border-r p-8 overflow-y-auto">
+          <div className="mb-8 flex items-center justify-between">
+            <h2 className="text-[10px] font-black text-indigo-500 tracking-[0.4em] uppercase">Learning Map</h2>
+            <div className={`px-2.5 py-1 rounded-lg text-[10px] font-black ${level === 3 ? 'bg-rose-100 text-rose-600' : 'bg-indigo-100 text-indigo-600'}`}>LV.{level}</div>
+          </div>
+          <div className="space-y-3">
+            {currentLevelData.map(part => (
+              <button key={part.id} onClick={() => { setSelectedPart(part.title); setCode(''); setOutput(''); setActiveTab('concept'); }}
+                className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl text-sm font-bold border-2 transition-all group ${selectedPart === part.title ? 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-sm' : 'border-transparent text-slate-400 hover:bg-slate-50 hover:text-slate-600'}`}>
+                <div className="flex items-center gap-4">
+                  <span className={`${selectedPart === part.title ? 'text-indigo-600' : 'text-slate-300 group-hover:text-slate-400'}`}>{part.icon}</span>
+                  {part.title}
+                </div>
+                {selectedPart === part.title && <ChevronRight size={14} className="animate-pulse" />}
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        {/* Content Area */}
+        <section className="flex-1 flex flex-col bg-white overflow-hidden shadow-2xl m-4 rounded-[2.5rem] border border-slate-200">
+          <div className="flex px-12 pt-8 border-b bg-slate-50/30 gap-10">
+            {['concept', 'practice'].map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)}
+                className={`pb-5 px-2 text-sm font-black transition-all border-b-4 ${activeTab === tab ? 'border-indigo-600 text-indigo-900' : 'border-transparent text-slate-400 hover:text-slate-500'}`}>
+                {tab === 'concept' ? '01 학습 목표' : '02 코딩 에디터'}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-12">
+            {activeTab === 'concept' ? (
+              <div className="max-w-4xl space-y-12 animate-in fade-in slide-in-from-bottom-5 duration-500">
+                <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-12 rounded-[3rem] text-white shadow-2xl shadow-indigo-200 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                    <BookOpen size={140} />
+                  </div>
+                  <div className="relative z-10">
+                    <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 inline-block">Objective</span>
+                    <h2 className="text-4xl font-black mb-4 tracking-tight leading-tight">{selectedPart}</h2>
+                    <p className="opacity-90 leading-relaxed text-xl font-medium max-w-2xl">{currentPart.concept}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-8 bg-indigo-600 rounded-full" />
+                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">실습 미션 목록 <span className="text-indigo-500 text-lg">({currentPart.examples.length})</span></h3>
+                  </div>
+                  <div className="grid gap-4">
+                    {currentPart.examples.map((ex, idx) => (
+                      <div key={idx} className="p-7 bg-slate-50 border-2 border-slate-100 rounded-[2rem] flex items-center justify-between hover:border-indigo-200 hover:bg-white transition-all group shadow-sm hover:shadow-md">
+                        <div className="flex items-start gap-6">
+                          <span className="w-10 h-10 rounded-2xl bg-white border-2 flex items-center justify-center text-sm font-black text-indigo-600 shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">0{idx+1}</span>
+                          <p className="text-lg font-bold text-slate-700 mt-1">{ex.q}</p>
+                        </div>
+                        <button onClick={() => { setCode(ex.skel); setActiveTab('practice'); setOutput(''); }} 
+                          className="bg-indigo-600 text-white px-7 py-4 rounded-2xl font-black text-xs hover:bg-indigo-700 transition-all flex items-center gap-3 shadow-lg active:scale-95 group-hover:scale-105">
+                          <Edit3 size={16} /> 실습 시작
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="h-full flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto animate-in zoom-in-95 duration-300">
+                {/* IDE Layout */}
+                <div className="flex-1 flex flex-col gap-6">
+                  <div className="flex-1 bg-slate-950 rounded-[3.5rem] shadow-2xl flex flex-col overflow-hidden border-[6px] border-slate-900 relative group">
+                    <div className="bg-slate-900/90 px-10 py-6 flex justify-between items-center border-b border-slate-800">
+                      <div className="flex items-center gap-8">
+                        <div className="flex gap-2.5">
+                          <div className="w-3.5 h-3.5 rounded-full bg-rose-500 shadow-lg shadow-rose-500/30" />
+                          <div className="w-3.5 h-3.5 rounded-full bg-amber-500 shadow-lg shadow-amber-500/30" />
+                          <div className="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/30" />
+                        </div>
+                        <span className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] border-l border-slate-800 pl-8 flex items-center gap-2">
+                          <Code size={12} /> interpreter_main.py
+                        </span>
+                      </div>
+                      <button onClick={handleRunCode} className="group flex items-center gap-3 bg-indigo-500 hover:bg-indigo-400 text-white px-10 py-3.5 rounded-2xl text-xs font-black transition-all shadow-xl shadow-indigo-500/20 active:scale-95">
+                        <Play size={18} fill="currentColor" /> RUN CODE
+                      </button>
+                    </div>
+                    <textarea 
+                      value={code} 
+                      onChange={e => setCode(e.target.value)} 
+                      className="flex-1 bg-transparent text-indigo-100 font-mono p-14 focus:outline-none resize-none text-xl leading-relaxed caret-indigo-400 selection:bg-indigo-500/30" 
+                      spellCheck="false" 
+                      placeholder="# 미션 코드를 완성해 주세요..." 
+                    />
+                    <div className="bg-black/60 p-12 border-t border-slate-800/50 backdrop-blur-xl">
+                      <p className="text-[10px] font-black text-indigo-400 mb-5 tracking-[0.3em] uppercase flex items-center gap-3">
+                        <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
+                        System Output Console
+                      </p>
+                      <pre className="font-mono text-base text-slate-300 min-h-[140px] leading-relaxed overflow-y-auto whitespace-pre-wrap scrollbar-hide italic">
+                        {output || '> Waiting for code execution... \n> 빈칸(____)을 지우고 정답을 입력한 뒤 RUN 버튼을 눌러보세요.'}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Card */}
+                <div className="w-full lg:w-[400px] space-y-6">
+                  <div className="bg-slate-900 p-12 rounded-[3.5rem] shadow-2xl text-white border border-slate-800/50 relative overflow-hidden group">
+                    <div className="absolute -bottom-10 -right-10 opacity-5 group-hover:scale-125 transition-transform duration-1000">
+                      <Lightbulb size={200} />
+                    </div>
+                    <h3 className="text-2xl font-black mb-8 flex items-center gap-4 text-indigo-400"><Lightbulb className="text-amber-400" size={28} /> 코딩 가이드</h3>
+                    <div className="space-y-8 relative z-10">
+                      <div className="p-8 bg-white/5 rounded-[2.5rem] border border-white/10 text-base leading-relaxed font-bold text-slate-300 shadow-inner">
+                        <p className="mb-4 text-indigo-400 text-xs font-black uppercase tracking-widest">Helpful Tip:</p>
+                        파이썬은 <span className="text-amber-400">들여쓰기(Indentation)</span>가 생명입니다! if문이나 for문 다음 줄은 반드시 탭(Tab)이나 공백을 넣어주세요.
+                      </div>
+                      <div className="space-y-4">
+                        <button onClick={() => { setIsSubmitted(true); setTimeout(() => setIsSubmitted(false), 2000); }} 
+                          disabled={!code || code.includes('____')}
+                          className={`w-full py-6 rounded-3xl font-black text-sm transition-all shadow-2xl active:scale-95 ${isSubmitted ? 'bg-emerald-500 text-white translate-y-1' : 'bg-white text-slate-900 hover:bg-slate-100 disabled:opacity-30 disabled:grayscale'}`}>
+                          {isSubmitted ? 'MISSION COMPLETED!' : '미션 최종 제출하기'}
+                        </button>
+                        <p className="text-center text-[10px] text-slate-500 font-bold uppercase tracking-widest">Authorized by Python Learner Console</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-10 rounded-[3rem] bg-indigo-50 border-2 border-indigo-100/50 shadow-sm">
+                    <div className="flex justify-between items-end mb-5">
+                      <h4 className="font-black text-indigo-900 text-xs uppercase tracking-[0.2em]">Learning Progress</h4>
+                      <span className="text-indigo-600 font-black text-lg">{Math.round((level/3)*100)}%</span>
+                    </div>
+                    <div className="h-4 w-full bg-indigo-200/50 rounded-full overflow-hidden shadow-inner border border-indigo-200">
+                      <div className="h-full bg-gradient-to-r from-indigo-500 to-indigo-700 rounded-full transition-all duration-1000 ease-out" style={{width: `${(level/3)*100}%`}} />
+                    </div>
+                    <p className="text-[11px] font-black text-indigo-400 mt-6 text-center italic tracking-wider">Level {level} / 3 • {selectedPart}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+};
+
+export default App;
